@@ -1,12 +1,14 @@
 
-# UART Implementation
+# SBUS / UART Implementation
 
-A very simple UART implementation, written in Verilog.
+A very simple UART and inverted Futaba s.Bus implementation, written in Verilog.
 
 ---
 
 This is a really simple implementation of a Universal Asynchronous Reciever
-Transmitter (UART) modem. It can be synthesised for use with FPGAs, and is
+Transmitter (UART) modem. And also its inverted version known as Futaba s.Bus.
+
+I It can be synthesised for use with FPGAs, and is
 small enough to sit along side most existing projects as a peripheral.
 
 It was developed with Icarus Verilog and GTKWave, so should cost you nothing
