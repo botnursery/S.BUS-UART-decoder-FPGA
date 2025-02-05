@@ -1,7 +1,5 @@
-
 // 
 // Module: uart_rx 
-// 
 // Notes:
 // - UART reciever module.
 //
@@ -10,10 +8,13 @@ module uart_rx(
 input  wire       clk          , // Top level system clock input.
 input  wire       resetn       , // Asynchronous active low reset.
 input  wire       uart_rxd     , // UART Recieve pin.
-input  wire       uart_rx_en   , // Recieve enable
+input  wire       uart_rx_en   , // Recieve enable.
 output wire       uart_rx_break, // Did we get a BREAK message?
 output wire       uart_rx_valid, // Valid data recieved and available.
-output reg  [PAYLOAD_BITS-1:0] uart_rx_data   // The recieved data.
+output wire       uart_rx_fe,		// Frame error
+//output wire       parity,			// Parity bit calculated
+output reg			uart_rx_pe,				// Check if even parity bit matches.
+output reg  [PAYLOAD_BITS-1:0] uart_rx_data // The recieved data.
 );
 
 // --------------------------------------------------------------------------- 
@@ -22,7 +23,7 @@ output reg  [PAYLOAD_BITS-1:0] uart_rx_data   // The recieved data.
 
 //
 // Input bit rate of the UART line.
-parameter   BIT_RATE        = 9600; // bits / sec
+parameter   BIT_RATE        = 100_000; // bits / sec
 localparam  BIT_P           = 1_000_000_000 * 1/BIT_RATE; // nanoseconds
 
 //
@@ -32,11 +33,12 @@ localparam  CLK_P           = 1_000_000_000 * 1/CLK_HZ; // nanoseconds
 
 //
 // Number of data bits recieved per UART packet.
-parameter   PAYLOAD_BITS    = 8;
-
-//
-// Number of stop bits indicating the end of a packet.
-parameter   STOP_BITS       = 1;
+// The presence of parity bit: 1 - present, 0 - not.
+// Number of stop bits indicating the end of a packet 1 or 2.
+localparam DATA_BITS = 8;
+localparam PARITY_BIT = 1;
+localparam STOP_BITS  = 2;
+parameter PAYLOAD_BITS = DATA_BITS+PARITY_BIT+STOP_BITS;
 
 // -------------------------------------------------------------------------- 
 // Internal parameters.
@@ -91,7 +93,7 @@ localparam FSM_STOP = 3;
 // 
 
 assign uart_rx_break = uart_rx_valid && ~|recieved_data;
-assign uart_rx_valid = fsm_state == FSM_STOP && n_fsm_state == FSM_IDLE;
+assign uart_rx_valid = fsm_state == FSM_STOP && n_fsm_state == FSM_IDLE; //&& even;
 
 always @(posedge clk) begin
     if(!resetn) begin
@@ -203,5 +205,21 @@ always @(posedge clk) begin : p_rxd_reg
     end
 end
 
+// --------------------------------------------------------------------------- 
+
+// Parity check
+// Calculate parity by XORing all bits of uart_rx_data except the parity and stop bits
+wire parity;
+assign parity = ^(uart_rx_data[PAYLOAD_BITS-STOP_BITS-PARITY_BIT-1:0]);
+// Always block to even check parity
+always @(uart_rx_data) begin
+    if (parity == uart_rx_data[PAYLOAD_BITS-STOP_BITS-1])
+        uart_rx_pe <= 1'b0; // Parity matches - 0 
+    else 
+        uart_rx_pe <= PARITY_BIT ? 1'b1 : 1'b0; // Parity error - 1
+end
+
+// Stop bits check error flag - 1
+assign uart_rx_fe = STOP_BITS-1 ? ~&uart_rx_data[PAYLOAD_BITS-1:PAYLOAD_BITS-2] : ~uart_rx_data[PAYLOAD_BITS-1];
 
 endmodule

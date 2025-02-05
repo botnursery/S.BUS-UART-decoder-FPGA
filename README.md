@@ -6,16 +6,17 @@ A very simple UART and inverted Futaba s.Bus implementation, written in Verilog.
 ---
 
 This is a really simple implementation of a Universal Asynchronous Reciever
-Transmitter (UART) modem. And also its inverted version known as Futaba s.Bus.
+Transmitter (UART) modem.
+And also it its inverted version with frame decoder known as Futaba sBus protocol.
 
-I It can be synthesised for use with FPGAs, and is
+It can be synthesised for use with FPGAs, and is
 small enough to sit along side most existing projects as a peripheral.
 
-It was developed with Icarus Verilog and GTKWave, so should cost you nothing
-to setup and play with in your own simulations.
+It was adapted for Quartus Prime Lite Edition(23.1std),
+it's free so should cost you nothing to setup and play with in your own simulations.
 
-I have tested it with a Xilinx Artix-7 FPGA using the Arty Development board
-from Digilent. It runs happily using a 50MHz clock and so long as you buffer
+I have tested it with a Intel/Altera FPGA using the QMTech® CycloneIV Starter Kit board.
+It runs happily using a 50MHz clock and so long as you buffer
 the input and output pins properly, should be able to run much faster.
 
 This isn't the smallest or the fastest UART implementation around, but it
@@ -23,30 +24,23 @@ should be the easiest to integrated into a project.
 
 ## Tools
 
-- [Icarus Verilog](http://iverilog.icarus.com/)
-- [GTK Wave](http://gtkwave.sourceforge.net/)
+- [Quartus Prime Lite Edition](https://www.intel.com/content/www/us/en/software-kit/825278/intel-quartus-prime-lite-edition-design-software-version-23-1-1-for-windows.html)
+- [Questa Intel Starter FPGA Edition](https://www.intel.com/content/www/us/en/software-kit/795215/questa-intel-fpgas-standard-edition-software-version-23-1.html)
 
-Both can be installed on Ubuntu via the following command:
+Both for Windows.
 
-```sh
-$> sudo apt-get install iverilog gtkwave
-```
 
 ## Simulation
 
-To run the simple testbench, you can use the `Makefile`:
+To run the simple testbench, you can use the `tb.v`.
 
-```sh
-$> make rx tx
-```
-
-This will build the separate testbenches for the RX and TX modules, run
-their simulations, and output their wave files to `./work/`
+There was built the separate testbenches for the RX and TX modules `tb_rx.v` `tb_tx.v`, 
+run their simulations, and output their wave files to `.\simulation\questa\waves-??.vcd`
 
 ## Implementation
 
-When implemented on an Arty Development board using the constraints file in
-`./constraints` and the Xilinx default synthesis strategy, the following
+When implemented on my development board using the constraints file in
+`./constraints` and  default synthesis strategy, the following
 utilisation numbers are reported:
 
 Module  | Slice LUTs | Slice Registers | Slices | LUT as Logic | LUT FF Pairs
