@@ -1,13 +1,17 @@
 
 # SBUS / UART Implementation
 
-A very simple UART and inverted Futaba s.Bus implementation, written in Verilog.
+A very simple UART inverted and Futaba S.BUS implementation, written in Verilog.
+Based on `ben-marshall/uart` repository.
 
 ---
 
 This is a really simple implementation of a Universal Asynchronous Reciever
 Transmitter (UART) modem.
-And also it its inverted version with frame decoder known as Futaba sBus protocol.
+
+And also it its inverted version with frame decoder known as Futaba S.BUS protocol.
+
+Added a block of Start-bit detection, as well as a monitoring module.
 
 It can be synthesised for use with FPGAs, and is
 small enough to sit along side most existing projects as a peripheral.
@@ -16,7 +20,7 @@ It was adapted for Quartus Prime Lite Edition(23.1std),
 it's free so should cost you nothing to setup and play with in your own simulations.
 
 I have tested it with a Intel/Altera FPGA using the QMTech® CycloneIV Starter Kit board.
-It runs happily using a 50MHz clock and so long as you buffer
+It runs happily using a 50MHz clock and so long as you buffer 
 the input and output pins properly, should be able to run much faster.
 
 This isn't the smallest or the fastest UART implementation around, but it
@@ -33,9 +37,8 @@ Both for Windows.
 ## Simulation
 
 To run the simple testbench, you can use the `tb.v`.
-
-There was built the separate testbenches for the RX and TX modules `tb_rx.v` `tb_tx.v`, 
-run their simulations, and output their wave files to `.\simulation\questa\waves-??.vcd`
+There was built the separate testbenches for the RX and TX modules `tb_rx.v` `tb_tx.v`.
+Run their simulations, and output their wave files to `.\simulation\questa\waves-??.vcd`
 
 ## Implementation
 
@@ -69,10 +72,10 @@ output                  uart_rx_valid, // Valid data recieved/available.
 output [PAYLOAD_BITS:0] uart_rx_data   // The recieved data.
 );
 
-parameter   BIT_RATE = 9600;      // Input bit rate of the UART line.
+parameter   BIT_RATE = 100000;      // Input bit rate of the UART line.
 parameter   CLK_HZ   = 100000000; // Clock frequency in hertz.
 parameter   PAYLOAD_BITS    = 8;  // Number of data bits per UART packet.
-parameter   STOP_BITS       = 1;  // Stop bits per UART packet.
+parameter   STOP_BITS       = 2;  // Stop bits per UART packet.
 ```
 
 ### `uart_tx`
@@ -89,8 +92,8 @@ input                     uart_tx_en  , // Send the data on uart_tx_data
 input  [PAYLOAD_BITS-1:0] uart_tx_data  // The data to be sent
 );
 
-parameter   BIT_RATE = 9600;      // Input bit rate of the UART line.
+parameter   BIT_RATE = 100000;      // Input bit rate of the UART line.
 parameter   CLK_HZ   = 100000000; // Clock frequency in hertz.
 parameter   PAYLOAD_BITS    = 8;  // Number of data bits per UART packet.
-parameter   STOP_BITS       = 1;  // Stop bits per UART packet.
+parameter   STOP_BITS       = 2;  // Stop bits per UART packet.
 ```
