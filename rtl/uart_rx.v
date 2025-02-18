@@ -12,8 +12,8 @@ input  wire       uart_rx_en   , // Recieve enable.
 output wire       uart_rx_break, // Did we get a BREAK message?
 output wire       uart_rx_valid, // Valid data recieved and available.
 output wire       uart_rx_fe,		// Frame error
-//output wire       parity,			// Parity bit calculated
-output reg			uart_rx_pe,				// Check if even parity bit matches.
+//output wire       parity,		// Parity bit calculated
+output reg			uart_rx_pe,		// Check if even parity bit matches.
 output reg  [PAYLOAD_BITS-1:0] uart_rx_data // The recieved data.
 );
 
@@ -35,6 +35,7 @@ localparam  CLK_P           = 1_000_000_000 * 1/CLK_HZ; // nanoseconds
 // Number of data bits recieved per UART packet.
 // The presence of parity bit: 1 - present, 0 - not.
 // Number of stop bits indicating the end of a packet 1 or 2.
+localparam INVERTED  = 0;
 localparam DATA_BITS = 8;
 localparam PARITY_BIT = 1;
 localparam STOP_BITS  = 2;
@@ -61,6 +62,9 @@ localparam       COUNT_REG_LEN      = 1+$clog2(CYCLES_PER_BIT);
 // paths from input pins into the logic.
 reg rxd_reg;
 reg rxd_reg_0;
+// If need inverted input
+wire uart_rxd_inv;
+assign uart_rxd_inv = (INVERTED) ? ~uart_rxd : uart_rxd;
 
 //
 // Storage for the recieved serial data.
@@ -93,7 +97,7 @@ localparam FSM_STOP = 3;
 // 
 
 assign uart_rx_break = uart_rx_valid && ~|recieved_data;
-assign uart_rx_valid = fsm_state == FSM_STOP && n_fsm_state == FSM_IDLE; //&& even;
+assign uart_rx_valid = fsm_state == FSM_STOP && n_fsm_state == FSM_IDLE;
 
 always @(posedge clk) begin
     if(!resetn) begin
@@ -201,13 +205,14 @@ always @(posedge clk) begin : p_rxd_reg
         rxd_reg_0   <= 1'b1;
     end else if(uart_rx_en) begin
         rxd_reg     <= rxd_reg_0;
-        rxd_reg_0   <= uart_rxd;
+        rxd_reg_0   <= uart_rxd_inv;
     end
 end
 
 // --------------------------------------------------------------------------- 
+// Checking integrity
+//
 
-// Parity check
 // Calculate parity by XORing all bits of uart_rx_data except the parity and stop bits
 wire parity;
 assign parity = ^(uart_rx_data[PAYLOAD_BITS-STOP_BITS-PARITY_BIT-1:0]);
@@ -219,7 +224,7 @@ always @(uart_rx_data) begin
         uart_rx_pe <= PARITY_BIT ? 1'b1 : 1'b0; // Parity error - 1
 end
 
-// Stop bits check error flag - 1
+// Stop bits check: error flag - 1
 assign uart_rx_fe = STOP_BITS-1 ? ~&uart_rx_data[PAYLOAD_BITS-1:PAYLOAD_BITS-2] : ~uart_rx_data[PAYLOAD_BITS-1];
 
 endmodule
